@@ -1,8 +1,6 @@
 const captureAndCrop = require("./captureAndCrop");
 
-// Example 
-const area = new captureAndCrop();
-const area2 = new captureAndCrop()
+// EXAMPLE
 
 // options are optional
 const options =  { threshold: 100, tolerance: 10 }
@@ -13,19 +11,33 @@ const region = {
     height: 150 // height of the region
 };
 
-area.setIsDebug(true)
-area.check("Test1", region, options)
-area2.check()
+captureAndCrop.setIsDebug(false)
 
-setTimeout(async () =>{
-    // detects movement
-    const result = await area.check() 
-    console.log("INDEX.js result : " + result);
+setInterval(async () =>{
+    console.clear();
+    // Takes a screenshot
+    await captureAndCrop.snap() 
+
+    // detects chance in pixels
+    const checkArea1 = captureAndCrop.check("Area1", region, options)
+    console.log("INDEX.js -- Area 1 check is : %s", checkArea1);
+
+    const checkArea2 = captureAndCrop.check( 
+        'Area2',
+        {
+            x: 300, 
+            y: 500,    
+            width: 20, 
+            height: 15 
+        }, { threshold: 10, tolerance: 5 }
+    )
+    console.log("INDEX.js -- Area 2 check is : %s",checkArea2);
     
-    // croped image buffer
-    const image = area.getImage();
-    console.log(image);
+    // cropped image buffer
+    // const image = captureAndCrop.getImage();
+    //console.log(image);
 
-    area.saveImage();
+    // saves the image to images
+    //captureAndCrop.saveImage();
     
 }, 2000)

@@ -25,13 +25,17 @@ The script extracts this region from the full screenshot.
 The cropped region is saved as a PNG file (diff_{id}.png) in the images directory it will automatically save it in debug mode otherwise it is required to call saveImage()
 The function getImage() returns an image buffer of the previous cropped image.
 
+This takes a screenshot.
+````
+await captureAndCrop.snap();
+````
 This returns true when a change has been detected otherwise it will be false.
 
 ````
-await captureAndCrop.check("ID", region, options);
+captureAndCrop.check("ID", region, options);
 ````
 
-This saves the image.
+This saves the image cropped.
 ````
 captureAndCrop.saveImage();
 ````

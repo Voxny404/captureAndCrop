@@ -2,11 +2,12 @@ const screenshot = require('screenshot-desktop');
 const fs = require('fs');
 const { PNG } = require('pngjs');
 
-class ImageChangeDetection {
+class CaptureAndCrop {
     constructor() {
         this.id = "defaut"
         this.isDebug = false;
         this.prevScreenshot = null;
+        this.beforePrevScreenshot = null;
         this.options = { threshold: 100, tolerance: 10 }
         this.region = {
             x: 100,     // x coordinate (from the left)
@@ -26,6 +27,8 @@ class ImageChangeDetection {
       return PNG.sync.write(diff);
     }
 
+    
+
     saveImage() {
       if (!this.prevScreenshot) return console.log("CaptureAndCrop failed to save image!");
       
@@ -33,41 +36,55 @@ class ImageChangeDetection {
     }
 
     check(id, region, options) {
-        if (id) this.#setId(id)
-        if (region) this.#setRegion(region);
-        if (options) this.#setOptions(options);
+      if (id) this.#setId(id)
+      if (region) this.#setRegion(region);
+      if (options) this.#setOptions(options);
+      
+      const img1 = this.#getRawImage(this.prevScreenshot);
+      const img2 = this.#getRawImage(this.beforePrevScreenshot);
+      
+      if (!img2) return console.error("CaptureAndCrop: Image is empty");
+      
+      let isImageChanged = false;
+
+      if (img1) {
+        const colorChangeCount = this.#compareImagesForColorChangeInRegion(img1, img2, this.region, this.options.tolerance);
+        
+        if (colorChangeCount > this.options.threshold) { // threshold for action
+
+          if (this.isDebug) console.log('ID: %s --> Significant color change detected in region!', this.id);
+          
+          isImageChanged = true;
+        }
+      }
+
+      this.#debuggMode(img2)
+      
+      return isImageChanged
+    }
+
+    async snap() {
+        this.beforePrevScreenshot = this.prevScreenshot
 
         return screenshot({ format: 'png' }).then((imgBuffer) => {
-          const img1 = this.prevScreenshot ? PNG.sync.read(this.prevScreenshot) : null;
-          const img2 = PNG.sync.read(imgBuffer);
-            
-          let isImageChanged = false; 
-
-          if (img1) {
-            const colorChangeCount = this.#compareImagesForColorChangeInRegion(img1, img2, this.region, this.options.tolerance);
-            
-            if (colorChangeCount > this.options.threshold) { // threshold for action
-
-              if (this.isDebug) console.log('ID: %s Significant color change detected in region!', this.id);
-              
-              isImageChanged = true;
-            }
-          }
-      
-          this.#debuggMode(img2)
-      
+          
           this.prevScreenshot = imgBuffer;  // Save the current screenshot for the next comparison
-          return isImageChanged;
+          if (!this.beforePrevScreenshot) this.beforePrevScreenshot = imgBuffer;
+          return;
         }).catch(console.error);
         
     }
 
+    #getRawImage(img) {
+      return this.prevScreenshot ? PNG.sync.read(img) : null;
+    }
+
     #getId() {
-      return this.id.replace('\x1B[32m', '').replace('\x1B[0m', '')
+      return this.id
     }
 
     #setId(id) {
-        this.id = "\x1b[32m"+ id + "\x1b[0m"
+        this.id = id
     }
 
     #setOptions({threshold, tolerance}) {
@@ -140,7 +157,7 @@ class ImageChangeDetection {
       
         // Save the diff image
         fs.writeFileSync(`./images/diff_${this.#getId()}.png`, PNG.sync.write(diff));
-        console.log('ID: %s Difference image saved as diff.png', this.id);
+        console.log('ID: %s --> Difference image saved as diff.png', this.id);
     }
 
     #debuggMode(img) {
@@ -151,4 +168,5 @@ class ImageChangeDetection {
     
 }
 
-module.exports = ImageChangeDetection;
+const singelton = new CaptureAndCrop()
+module.exports = singelton;
