@@ -1,0 +1,15 @@
+{
+  "name": "captureAndCrop",
+  "version": "1.0.0",
+  "description": "This detects a change in images",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Voxny404",
+  "license": "MIT",
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "screenshot-desktop": "^1.15.0"
+  }
+}
